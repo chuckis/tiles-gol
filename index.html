@@ -36,29 +36,31 @@
     <canvas id="grid" width="320" height="320"></canvas>
     <pre id="pattern"></pre>
   </div>
-  <div class="controls">
-    <button id="clearBtn">Очистить</button>
-    <button id="fillBtn">Заполнить</button>
-    <button id="invertBtn">Инвертировать</button>
-    <button id="randomBtn">Случайно</button>
-    <br>
-    <button id="lifeBtn">Запустить игру жизни</button>
-    <button id="stepBtn">Шаг</button>
-    <br>
-    <label>Скорость: <input id="speedRange" type="range" min="50" max="1000" step="50" value="200"> мс</label>
-    <br>
-    <label>
-      Предустановки:
-      <select id="presetSelect">
-        <option value="">-- выбрать --</option>
-        <option value="glider">Глайдер</option>
-        <option value="blinker">Мигалка</option>
-        <option value="toad">Жаба</option>
-        <option value="pulsar">Пульсар</option>
-        <option value="lwss">Космический корабль</option>
-      </select>
-    </label>
-  </div>
+ <div class="controls">
+  <button id="clearBtn">Очистить</button>
+  <button id="fillBtn">Заполнить</button>
+  <button id="invertBtn">Инвертировать</button>
+  <button id="randomBtn">Случайно</button>
+  <br>
+  <button id="lifeBtn">Запустить игру жизни</button>
+  <button id="stepBtn">Шаг</button>
+  <button id="backBtn">←</button>
+  <button id="forwardBtn">→</button>
+  <br>
+  <label>Скорость: <input id="speedRange" type="range" min="50" max="1000" step="50" value="200"> мс</label>
+  <br>
+  <label>
+    Предустановки:
+    <select id="presetSelect">
+      <option value="">-- выбрать --</option>
+      <option value="glider">Глайдер</option>
+      <option value="blinker">Мигалка</option>
+      <option value="toad">Жаба</option>
+      <option value="pulsar">Пульсар</option>
+      <option value="lwss">Космический корабль</option>
+    </select>
+  </label>
+</div>
   <script src="life-tiles.js"></script>
 </body>
 </html>

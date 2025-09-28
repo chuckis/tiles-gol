@@ -2,9 +2,28 @@ const canvas = document.getElementById("grid");
 const ctx = canvas.getContext("2d");
 const size = 16;
 const tile = canvas.width / size;
+
 let grid = Array(size).fill().map(() => Array(size).fill(0));
 let running = false;
 let interval = null;
+
+let history = [];
+let historyIndex = -1;
+
+function saveHistory() {
+  history = history.slice(0, historyIndex + 1);
+  history.push(grid.map(r => [...r]));
+  historyIndex++;
+  if (history.length > 100) history.shift();
+}
+
+function loadHistory(index) {
+  if (index < 0 || index >= history.length) return;
+  grid = history[index].map(r => [...r]);
+  drawGrid();
+  updatePattern();
+  historyIndex = index;
+}
 
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -26,6 +45,7 @@ function toggleCell(x, y) {
   grid[y][x] = grid[y][x] ? 0 : 1;
   drawGrid();
   updatePattern();
+  saveHistory();
 }
 
 canvas.addEventListener("click", e => {
@@ -34,16 +54,6 @@ canvas.addEventListener("click", e => {
   const y = Math.floor((e.clientY - rect.top) / tile);
   toggleCell(x, y);
 });
-
-// ---- Управление ----
-document.getElementById("clearBtn").onclick = () => { stopLife(); grid = grid.map(r => r.fill(0)); drawGrid(); updatePattern(); };
-document.getElementById("fillBtn").onclick = () => { stopLife(); grid = grid.map(r => r.fill(1)); drawGrid(); updatePattern(); };
-document.getElementById("invertBtn").onclick = () => { stopLife(); grid = grid.map(r => r.map(v => v ? 0 : 1)); drawGrid(); updatePattern(); };
-document.getElementById("randomBtn").onclick = () => { stopLife(); grid = grid.map(r => r.map(() => Math.random() > 0.7 ? 1 : 0)); drawGrid(); updatePattern(); };
-
-const lifeBtn = document.getElementById("lifeBtn");
-const stepBtn = document.getElementById("stepBtn");
-const speedRange = document.getElementById("speedRange");
 
 function stepLife() {
   const next = grid.map((row, y) =>
@@ -64,6 +74,7 @@ function stepLife() {
     })
   );
   grid = next;
+  saveHistory();
   drawGrid();
   updatePattern();
 }
@@ -82,30 +93,42 @@ function stopLife() {
   clearInterval(interval);
 }
 
+function resetGrid(newGrid=null) {
+  stopLife();
+  grid = newGrid ? newGrid.map(r => [...r]) : Array(size).fill().map(()=>Array(size).fill(0));
+  drawGrid();
+  updatePattern();
+  history = [];
+  historyIndex = -1;
+  saveHistory();
+}
+
+// ---- элементы управления ----
+const lifeBtn = document.getElementById("lifeBtn");
+const stepBtn = document.getElementById("stepBtn");
+const speedRange = document.getElementById("speedRange");
+const backBtn = document.getElementById("backBtn");
+const forwardBtn = document.getElementById("forwardBtn");
+const presetSelect = document.getElementById("presetSelect");
+
+document.getElementById("clearBtn").onclick = () => resetGrid();
+document.getElementById("fillBtn").onclick = () => resetGrid(Array(size).fill().map(()=>Array(size).fill(1)));
+document.getElementById("invertBtn").onclick = () => resetGrid(grid.map(r=>r.map(v=>v?0:1)));
+document.getElementById("randomBtn").onclick = () => resetGrid(grid.map(r=>r.map(()=>Math.random()>0.7?1:0)));
+
 lifeBtn.onclick = () => running ? stopLife() : startLife();
 stepBtn.onclick = () => { stopLife(); stepLife(); };
 speedRange.oninput = () => { if (running) { stopLife(); startLife(); } };
 
-drawGrid();
-updatePattern();
+backBtn.onclick = () => { if(historyIndex>0) loadHistory(historyIndex-1); };
+forwardBtn.onclick = () => { if(historyIndex<history.length-1) loadHistory(historyIndex+1); };
 
-const presetSelect = document.getElementById("presetSelect");
-
+// ---- предустановки ----
 const presets = {
-  glider: [
-    [1,0,0],
-    [0,1,1],
-    [1,1,0],
-  ],
-  blinker: [
-    [1,1,1],
-  ],
-  toad: [
-    [0,1,1,1],
-    [1,1,1,0],
-  ],
+  glider: [[1,0,0],[0,1,1],[1,1,0]],
+  blinker: [[1,1,1]],
+  toad: [[0,1,1,1],[1,1,1,0]],
   pulsar: [
-    // классический пульсар 13x13
     [0,0,0,0,1,1,1,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0],
     [1,0,0,1,0,0,0,0,0,1,0,0,1],
@@ -118,35 +141,27 @@ const presets = {
     [1,0,0,1,0,0,0,0,0,1,0,0,1],
     [1,0,0,1,0,0,0,0,0,1,0,0,1],
     [0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,1,1,1,0,0,0,0,0,0]
   ],
-  lwss: [
-    [0,1,1,1,1],
-    [1,0,0,0,1],
-    [0,0,0,0,1],
-    [1,0,0,1,0],
-  ]
+  lwss: [[0,1,1,1,1],[1,0,0,0,1],[0,0,0,0,1],[1,0,0,1,0]]
 };
 
 function placePreset(name) {
-  stopLife();
-  grid = Array(size).fill().map(() => Array(size).fill(0));
   const pattern = presets[name];
   if (!pattern) return;
-  const py = Math.floor((size - pattern.length) / 2);
-  const px = Math.floor((size - pattern[0].length) / 2);
-  for (let y = 0; y < pattern.length; y++) {
-    for (let x = 0; x < pattern[y].length; x++) {
-      grid[py + y][px + x] = pattern[y][x];
+  const py = Math.floor((size - pattern.length)/2);
+  const px = Math.floor((size - pattern[0].length)/2);
+  const newGrid = Array(size).fill().map(()=>Array(size).fill(0));
+  for (let y=0; y<pattern.length; y++) {
+    for (let x=0; x<pattern[y].length; x++) {
+      newGrid[py+y][px+x] = pattern[y][x];
     }
   }
-  drawGrid();
-  updatePattern();
+  resetGrid(newGrid);
 }
 
-presetSelect.onchange = () => {
-  if (presetSelect.value) {
-    placePreset(presetSelect.value);
-    presetSelect.value = ""; // сбросить выбор
-  }
-};
+presetSelect.onchange = () => { if(presetSelect.value){ placePreset(presetSelect.value); presetSelect.value=""; } };
+
+drawGrid();
+updatePattern();
+saveHistory();
