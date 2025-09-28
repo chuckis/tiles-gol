@@ -10,11 +10,32 @@ let interval = null;
 let history = [];
 let historyIndex = -1;
 
+// ---- LocalStorage: загрузка истории при старте ----
+const saved = localStorage.getItem("lifeHistory");
+if (saved) {
+  try {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed.history) && typeof parsed.index === "number") {
+      history = parsed.history;
+      historyIndex = parsed.index;
+      loadHistory(historyIndex);
+    }
+  } catch (e) {
+    console.warn("Не удалось загрузить историю из LocalStorage", e);
+  }
+}
+
+// ---- функции истории ----
 function saveHistory() {
-  history = history.slice(0, historyIndex + 1);
+  history = history.slice(0, historyIndex + 1); // обрезаем "будущее"
   history.push(grid.map(r => [...r]));
   historyIndex++;
   if (history.length > 100) history.shift();
+
+  localStorage.setItem("lifeHistory", JSON.stringify({
+    history: history,
+    index: historyIndex
+  }));
 }
 
 function loadHistory(index) {
@@ -25,6 +46,13 @@ function loadHistory(index) {
   historyIndex = index;
 }
 
+function clearHistory() {
+  localStorage.removeItem("lifeHistory");
+  history = [];
+  historyIndex = -1;
+}
+
+// ---- рисование и отображение ----
 function drawGrid() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   for (let y = 0; y < size; y++) {
@@ -55,6 +83,7 @@ canvas.addEventListener("click", e => {
   toggleCell(x, y);
 });
 
+// ---- шаг игры жизни ----
 function stepLife() {
   const next = grid.map((row, y) =>
     row.map((cell, x) => {
@@ -79,6 +108,7 @@ function stepLife() {
   updatePattern();
 }
 
+// ---- старт / стоп ----
 function startLife() {
   if (!running) {
     running = true;
@@ -93,13 +123,13 @@ function stopLife() {
   clearInterval(interval);
 }
 
+// ---- сброс сетки ----
 function resetGrid(newGrid=null) {
   stopLife();
   grid = newGrid ? newGrid.map(r => [...r]) : Array(size).fill().map(()=>Array(size).fill(0));
   drawGrid();
   updatePattern();
-  history = [];
-  historyIndex = -1;
+  clearHistory();
   saveHistory();
 }
 
@@ -162,6 +192,7 @@ function placePreset(name) {
 
 presetSelect.onchange = () => { if(presetSelect.value){ placePreset(presetSelect.value); presetSelect.value=""; } };
 
+// ---- стартовая отрисовка ----
 drawGrid();
 updatePattern();
 saveHistory();
