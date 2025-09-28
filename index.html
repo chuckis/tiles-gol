@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Игра Жизнь — Учебный пример</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; }
+    canvas { border: 1px solid black; background: #eee; }
+    pre { background: #111; color: #0f0; padding: 10px; font-size: 15px; }
+    .controls { margin-top: 10px; }
+    button, input[type="range"], select {
+      margin: 5px 0; padding: 5px 10px;
+      border-radius: 5px; border: 1px solid #333;
+    }
+    button:hover, select:hover { background: #f0f0f0; cursor: pointer; }
+    @media (max-width: 600px) { .container { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <h1>Рисование тайлами и Игра Жизнь</h1>
+  <p>
+    Учебный пример: слева поле для рисования (16×16), справа код из 0 и 1.<br>
+    Подробнее: <a href="https://ru.wikipedia.org/wiki/Игра_«Жизнь»" target="_blank">Игра Жизнь (Википедия)</a>
+  </p>
+  <details>
+    <summary><strong>Правила игры</strong></summary>
+    <p>
+      1. Живая клетка с 2 или 3 соседями остаётся живой, иначе умирает.<br>
+      2. Пустая клетка с ровно 3 соседями становится живой.<br>
+      3. Остальные клетки не меняются.<br>
+      Соседи — 8 клеток вокруг.
+    </p>
+  </details>
+  <div class="container">
+    <canvas id="grid" width="320" height="320"></canvas>
+    <pre id="pattern"></pre>
+  </div>
+  <div class="controls">
+    <button id="clearBtn">Очистить</button>
+    <button id="fillBtn">Заполнить</button>
+    <button id="invertBtn">Инвертировать</button>
+    <button id="randomBtn">Случайно</button>
+    <br>
+    <button id="lifeBtn">Запустить игру жизни</button>
+    <button id="stepBtn">Шаг</button>
+    <br>
+    <label>Скорость: <input id="speedRange" type="range" min="50" max="1000" step="50" value="200"> мс</label>
+    <br>
+    <label>
+      Предустановки:
+      <select id="presetSelect">
+        <option value="">-- выбрать --</option>
+        <option value="glider">Глайдер</option>
+        <option value="blinker">Мигалка</option>
+        <option value="toad">Жаба</option>
+        <option value="pulsar">Пульсар</option>
+        <option value="lwss">Космический корабль</option>
+      </select>
+    </label>
+  </div>
+  <script src="life-tiles.js"></script>
+</body>
+</html>
